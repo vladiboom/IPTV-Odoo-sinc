@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+django
+django-tailwind
+pymysql
+sqlalchemy
+python-dotenv
+apscheduler
+requests
+httpx

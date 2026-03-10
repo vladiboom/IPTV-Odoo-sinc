@@ -36,93 +36,96 @@ def mysql_conn():
         if conn:
             conn.close()
 
+from django.core.paginator import Paginator
+
 @login_required
 def dashboard_index(request):
     """Vista principal: Muestra la auditoría de sincronización entre Odoo e IPTV."""
-    usuarios = []
-    estadisticas = {"total": 0, "sincronizados": 0, "discrepancias": 0}
     ahora_ts = int(time.time())
+    page_number = request.GET.get('page', 1)
+    status_filter = request.GET.get('status', 'all')
     
-    # Traducción amigable de los estados técnicos de Odoo
     traducciones_odoo = {
-        'active': 'Activo',
-        'inactive': 'Inactivo',
-        'disabled': 'Cortado',
-        'suspended': 'Suspendido',
-        'cancel': 'Anulado',
-        'removal_list': 'Lista de Retiro'
+        'active': 'Activo', 'inactive': 'Inactivo', 'disabled': 'Cortado',
+        'suspended': 'Suspendido', 'cancel': 'Anulado', 'removal_list': 'Lista de Retiro',
+        'not_found': 'No Existe'
     }
+
+    estadisticas = {"total": 0, "sincronizados": 0, "discrepancias": 0}
+    usuarios = []
 
     try:
         with mysql_conn() as conn:
             with conn.cursor() as cursor:
-                # Obtenemos los últimos 100 registros para auditar (ahora incluyendo sync_alert)
-                cursor.execute("""
-                    SELECT id, username, enabled, admin_enabled, exp_date, admin_notes 
-                    FROM users 
-                    ORDER BY id DESC 
-                    LIMIT 200
-                """)
-                usuarios = cursor.fetchall()
+                # 1. Obtener Estadísticas Globales Rápida (Sin recorrer todo en Python)
+                cursor.execute("SELECT COUNT(*) as total FROM users")
+                estadisticas["total"] = cursor.fetchone()["total"]
                 
-                for usr in usuarios:
-                    # 1. Recuperar el estado de Odoo (Almacenado por el puente en admin_notes)
-                    notas = usr.get('admin_notes', '')
+                cursor.execute("SELECT COUNT(*) as disc FROM users WHERE admin_notes LIKE '%Alert:%'")
+                estadisticas["discrepancias"] = cursor.fetchone()["disc"]
+                
+                # Sincronizados (Estimación rápida: los que tienen Odoo:Active y están habilitados sin alerta)
+                cursor.execute("SELECT COUNT(*) as ok FROM users WHERE enabled = 1 AND admin_notes LIKE 'Odoo:Active%' AND admin_notes NOT LIKE '%Alert:%'")
+                estadisticas["sincronizados"] = cursor.fetchone()["ok"]
+
+                # 2. Construir Query con Filtro
+                base_query = "SELECT id, username, enabled, exp_date, admin_notes FROM users"
+                params = []
+                if status_filter == 'activo':
+                    base_query += " WHERE enabled = 1"
+                elif status_filter == 'cortado':
+                    base_query += " WHERE enabled = 0"
+                
+                base_query += " ORDER BY id DESC"
+                
+                cursor.execute(base_query, params)
+                raw_users = cursor.fetchall()
+
+                # 3. Procesar datos para la vista
+                for usr in raw_users:
+                    notas = usr.get('admin_notes', '') or ""
                     raw_odoo = ""
-                    if notas and "Odoo:" in notas:
-                        # Extraer solo la parte del estado (antes del pipe si existe)
-                        # Ejemplo: "Odoo:active | Alert: ..." -> "active"
+                    if "Odoo:" in notas:
                         partes = notas.split("Odoo:")[-1].split("|")
                         raw_odoo = partes[0].strip().lower()
                         usr['odoo_state'] = traducciones_odoo.get(raw_odoo, raw_odoo.capitalize())
                         usr['odoo_color'] = "emerald" if raw_odoo == 'active' else "rose"
                     else:
-                        usr['odoo_state'] = "Desconocido"
+                        usr['odoo_state'] = "Esperando..."
                         usr['odoo_color'] = "slate"
 
-                    # 2. Evaluar estado real en IPTV (Considerando habilitación y fecha de expiración)
                     habilitado = usr.get('enabled') == 1
-                    exp_ts = int(usr['exp_date']) if usr.get('exp_date') and str(usr['exp_date']).isdigit() else 0
-                    vencido = (exp_ts < ahora_ts and exp_ts != 0)
-                    iptv_activo = habilitado and not vencido
-                    
-                    usr['iptv_label'] = "HABILITADO" if iptv_activo else "SIN ACCESO"
-                    usr['iptv_color'] = "emerald" if iptv_activo else "rose"
+                    usr['iptv_label'] = "ACTIVO" if habilitado else "CORTADO"
+                    usr['iptv_color'] = "emerald" if habilitado else "rose"
 
-                    # 3. Cálculo de Sincronía y Manejo de Inconsistencias
-                    # Detectamos si hay alerta guardada en la nota (ej. "Odoo:Active | Alert: CORTE_FORZADO")
                     sync_alert = ""
                     if "| Alert:" in notas:
                         sync_alert = notas.split("| Alert:")[-1].strip()
-                    
                     usr['sync_alert'] = sync_alert
                     
                     if not raw_odoo:
                         usr['sync_status'] = "PENDIENTE"
+                    elif sync_alert:
+                        usr['sync_status'] = "DISCREPANCIA"
+                    elif (raw_odoo == 'active') == habilitado:
+                        usr['sync_status'] = "SINCRONIZADO"
                     else:
-                        quiere_activo = (raw_odoo == 'active')
-                        
-                        if sync_alert:
-                            usr['sync_status'] = "INCONSISTENCIA CORREGIDA"
-                            estadisticas["discrepancias"] += 1
-                        elif quiere_activo == iptv_activo:
-                            usr['sync_status'] = "SINCRONIZADO"
-                            estadisticas["sincronizados"] += 1
-                        else:
-                            usr['sync_status'] = "DISCREPANCIA"
-                            estadisticas["discrepancias"] += 1
+                        usr['sync_status'] = "DISCREPANCIA"
+                
+                usuarios = raw_users
 
-                    # Fecha formateada
-                    usr['exp_date_human'] = datetime.datetime.fromtimestamp(exp_ts).strftime('%d/%m/%Y') if exp_ts != 0 else "Ilimitado"
-                    estadisticas["total"] += 1
-                    
     except Exception as e:
-        messages.error(request, str(e))
+        logger.error(f"Error cargando dashboard: {e}")
+        messages.error(request, "Error al cargar datos del servidor.")
+
+    # 4. Paginación (100 por página)
+    paginator = Paginator(usuarios, 100)
+    page_obj = paginator.get_page(page_number)
 
     return render(request, 'accounts_sync/index.html', {
-        'accounts': usuarios,
+        'page_obj': page_obj,
         'stats': estadisticas,
-        'last_update': datetime.datetime.now().strftime('%H:%M:%S'),
+        'status_filter': status_filter,
         'dry_run': os.getenv("SYNC_ENABLED", "false").lower() == "false"
     })
 

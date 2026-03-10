@@ -24,26 +24,22 @@
             <div class="flex items-center gap-4">
                 <div class="bg-indigo-600 p-2.5 rounded-2xl"><i data-lucide="activity" class="w-6 h-6"></i></div>
                 <div>
-                    <h1 class="text-xl font-black">Marketing Bridge</h1>
-                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Version 1.0 - Auditoría de
-                        Sincronía</p>
+                    <h1 class="text-xl font-black italic tracking-tighter">Marketing Bridge</h1>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Auditoría Odoo - IPTV</p>
                 </div>
             </div>
-            <div class="flex items-center gap-6">
-                {% if dry_run %}
-                <span
-                    class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest">Solo
-                    Lectura</span>
-                {% endif %}
-                <span class="text-xs font-mono text-slate-400">{{ last_update }}</span>
+            <div class="flex items-center gap-8">
+                <div class="flex flex-col items-end">
+                    <span id="venezuela-clock" class="text-xl font-black text-indigo-400 leading-none">00:00:00</span>
+                    <span class="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">Hora VZLA (VET)</span>
+                </div>
 
-                <!-- Botón de Cerrar Sesión -->
                 <form action="{% url 'logout' %}" method="post" class="inline">
                     {% csrf_token %}
                     <button type="submit"
-                        class="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-rose-900/20">
-                        <i data-lucide="log-out" class="w-4 h-4"></i>
-                        Cerrar Sesión
+                        class="flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-rose-900/40">
+                        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                        Salir
                     </button>
                 </form>
             </div>
@@ -53,95 +49,120 @@
     <main class="max-w-7xl mx-auto py-8 px-4">
         <!-- Dashboard Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+            <div
+                class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-200 group hover:border-indigo-500 transition-all duration-500">
                 <div class="flex justify-between items-center mb-2">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Usuarios</p>
-                    <i data-lucide="users" class="w-4 h-4 text-slate-300"></i>
+                    <p
+                        class="text-[10px] font-black text-slate-400 uppercase tracking-widest group-hover:text-indigo-500">
+                        Total Usuarios</p>
+                    <div class="bg-slate-50 p-2 rounded-xl group-hover:bg-indigo-50"><i data-lucide="users"
+                            class="w-4 h-4 text-slate-300 group-hover:text-indigo-500"></i></div>
                 </div>
-                <p class="text-3xl font-black text-slate-900">{{ stats.total }}</p>
+                <p class="text-4xl font-black text-slate-900">{{ stats.total }}</p>
             </div>
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
+            <div
+                class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-200 border-l-8 border-l-emerald-500 group">
                 <div class="flex justify-between items-center mb-2">
-                    <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">En Sintonía</p>
-                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-300"></i>
+                    <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">En Sintonía</p>
+                    <div class="bg-emerald-50 p-2 rounded-xl text-emerald-500"><i data-lucide="shield-check"
+                            class="w-4 h-4"></i></div>
                 </div>
-                <p class="text-3xl font-black text-emerald-600">{{ stats.sincronizados }}</p>
+                <p class="text-4xl font-black text-emerald-600">{{ stats.sincronizados }}</p>
             </div>
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 border-l-4 border-l-rose-500">
+            <div
+                class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-200 border-l-8 border-l-rose-500 group">
                 <div class="flex justify-between items-center mb-2">
-                    <p class="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Discrepancias</p>
-                    <i data-lucide="alert-circle" class="w-4 h-4 text-rose-300"></i>
+                    <p class="text-[10px] font-black text-rose-500 uppercase tracking-widest">Alertas de Sync</p>
+                    <div class="bg-rose-50 p-2 rounded-xl text-rose-500"><i data-lucide="alert-octagon"
+                            class="w-4 h-4"></i></div>
                 </div>
-                <p class="text-3xl font-black text-rose-600">{{ stats.discrepancias }}</p>
+                <p class="text-4xl font-black text-rose-600">{{ stats.discrepancias }}</p>
             </div>
         </div>
 
         <!-- Auditor Table -->
         <div class="bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden">
             <div
-                class="px-8 py-6 bg-slate-50 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                <h3 class="font-extrabold text-slate-800">Matriz de Verificación de Puente</h3>
-                <div class="flex gap-4 items-center">
+                class="px-8 py-7 bg-slate-50/50 border-b border-slate-100 flex flex-col xl:flex-row justify-between items-center gap-6">
+                <div>
+                    <h3 class="font-black text-xl text-slate-800 tracking-tight">Centro de Verificación Cruzada</h3>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Página {{
+                        page_obj.number }} de {{ page_obj.paginator.num_pages }}</p>
+                </div>
+
+                <div class="flex flex-wrap gap-4 items-center">
+                    <!-- Filtro de Estado -->
+                    <select id="statusFilter"
+                        class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 outline-none focus:border-indigo-500 cursor-pointer shadow-sm">
+                        <option value="all" {% if status_filter=='all' %}selected{% endif %}>VER TODOS</option>
+                        <option value="activo" {% if status_filter=='activo' %}selected{% endif %}>SOLO ACTIVOS</option>
+                        <option value="cortado" {% if status_filter=='cortado' %}selected{% endif %}>SOLO CORTADOS
+                        </option>
+                    </select>
+
                     <div class="relative w-64">
                         <i data-lucide="search"
                             class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 w-4 h-4"></i>
-                        <input type="text" id="userSearch" placeholder="Filtrar identificación..."
-                            class="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-slate-200 text-xs outline-none focus:border-indigo-500">
+                        <input type="text" id="userSearch" placeholder="Buscar identificación..."
+                            class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold outline-none focus:border-indigo-500 transition-all shadow-sm">
                     </div>
+
                     <button id="syncBtn"
-                        class="bg-slate-900 hover:bg-black text-white px-6 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-transform active:scale-95">
-                        <i data-lucide="refresh-cw" id="syncIcon" class="w-4 h-4"></i>
-                        Forzar Verificación
+                        class="bg-slate-900 hover:bg-black text-white px-6 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transform transition-all active:scale-95 shadow-lg shadow-slate-900/20">
+                        <i data-lucide="zap" id="syncIcon" class="w-4 h-4"></i>
+                        Forzar Puente
                     </button>
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto min-h-[500px]">
                 <table class="w-full text-left" id="accountsTable">
                     <thead>
                         <tr
-                            class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                            <th class="px-8 py-5">Identificación Cliente</th>
-                            <th class="px-8 py-5 text-center">Estado Odoo</th>
-                            <th class="px-8 py-5 text-center">Estado IPTV</th>
-                            <th class="px-8 py-5 text-center bg-slate-100/50">Estado Sincronía</th>
+                            class="bg-slate-50/30 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">
+                            <th class="px-8 py-6">Usuario IPTV</th>
+                            <th class="px-8 py-6 text-center">Estado Odoo</th>
+                            <th class="px-8 py-6 text-center">Estado IPTV</th>
+                            <th class="px-8 py-6 text-center bg-slate-100/30">Diagnóstico</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        {% for account in accounts %}
-                        <tr class="hover:bg-indigo-50/10 transition-colors">
-                            <td class="px-8 py-4">
-                                <span class="font-bold text-slate-800">{{ account.username }}</span>
-                                <p class="text-[9px] text-slate-400 font-mono">ID: {{ account.id }}</p>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for account in page_obj %}
+                        <tr class="hover:bg-slate-50/80 transition-all duration-200">
+                            <td class="px-8 py-5">
+                                <span class="font-extrabold text-slate-800 text-sm">{{ account.username }}</span>
+                                <div class="flex items-center gap-1.5 mt-1 opacity-40">
+                                    <span class="text-[9px] font-black tracking-widest italic">REF #{{ account.id
+                                        }}</span>
+                                </div>
                             </td>
-                            <td class="px-8 py-4 text-center">
+                            <td class="px-8 py-5 text-center">
                                 <span
-                                    class="bg-{{ account.odoo_color }}-50 text-{{ account.odoo_color }}-700 px-3 py-1 rounded-lg text-[10px] font-bold border border-{{ account.odoo_color }}-100">
+                                    class="bg-{{ account.odoo_color }}-50 text-{{ account.odoo_color }}-700 px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest border border-{{ account.odoo_color }}-100 shadow-sm uppercase">
                                     {{ account.odoo_state }}
                                 </span>
                             </td>
-                            <td class="px-8 py-4 text-center">
+                            <td class="px-8 py-5 text-center">
                                 <span
-                                    class="bg-{{ account.iptv_color }}-50 text-{{ account.iptv_color }}-700 px-3 py-1 rounded-lg text-[10px] font-bold border border-{{ account.iptv_color }}-100">
+                                    class="bg-{{ account.iptv_color }}-50 text-{{ account.iptv_color }}-700 px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest border border-{{ account.iptv_color }}-100 shadow-sm uppercase">
                                     {{ account.iptv_label }}
                                 </span>
                             </td>
-                            <td class="px-8 py-4 text-center bg-slate-50/30">
+                            <td class="px-8 py-5 text-center bg-slate-50/20">
                                 {% if account.sync_status == "SINCRONIZADO" %}
-                                <div class="inline-flex items-center text-emerald-600 gap-1.5">
-                                    <i data-lucide="check-check" class="w-4 h-4"></i>
-                                    <span class="text-[10px] font-black uppercase">En Sintonía</span>
+                                <div
+                                    class="inline-flex items-center text-emerald-600 gap-1.5 font-black uppercase text-[10px] tracking-widest">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                    Sincronizado
                                 </div>
                                 {% elif account.sync_status == "DISCREPANCIA" %}
                                 <div
-                                    class="inline-flex items-center text-rose-600 gap-1.5 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-100 animate-pulse">
+                                    class="inline-flex items-center text-rose-600 gap-1.5 font-black uppercase text-[10px] tracking-widest py-1.5 px-4 bg-rose-50 rounded-2xl border-2 border-rose-100 shadow-lg shadow-rose-200/20 animate-pulse">
                                     <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                                    <span class="text-[10px] font-black uppercase tracking-tighter">Corregir en
-                                        Sync</span>
+                                    ¡Sin Auditoría!
                                 </div>
                                 {% else %}
-                                <span class="text-[9px] font-bold text-slate-300 uppercase italic">Esperando
-                                    Motor...</span>
+                                <span class="text-[9px] font-bold text-slate-300 uppercase italic">Esperando...</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -149,16 +170,58 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Paginación -->
+            <div
+                class="px-8 py-6 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest italic">Mostrando {{
+                    page_obj.start_index }} - {{ page_obj.end_index }} de {{ stats.total }}</span>
+
+                <div class="flex gap-2">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}"
+                        class="p-3 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm"><i
+                            data-lucide="chevron-left" class="w-4 h-4"></i></a>
+                    {% endif %}
+
+                    <div
+                        class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-200 flex items-center">
+                        PÁGINA {{ page_obj.number }}
+                    </div>
+
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}"
+                        class="p-3 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-sm"><i
+                            data-lucide="chevron-right" class="w-4 h-4"></i></a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </main>
 
-    <footer class="py-12 text-center">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">&copy; 2026 Desarrollado por Ing
-            Vicente</p>
+    <footer class="py-12 text-center opacity-30">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em]">&copy; 2026 Sistema Odoo-IPTV |
+            Desarrollado por Ing Vicente</p>
     </footer>
 
     <script>
         lucide.createIcons();
+
+        // Reloj Venezuela Real-time
+        function updateClock() {
+            const options = { timeZone: 'America/Caracas', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const time = new Intl.DateTimeFormat('es-VE', options).format(new Date());
+            document.getElementById('venezuela-clock').innerText = time;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Filtro de Estado
+        document.getElementById('statusFilter').addEventListener('change', (e) => {
+            window.location.href = `?page=1&status=${e.target.value}`;
+        });
+
+        // Búsqueda Local
         document.getElementById('userSearch').addEventListener('keyup', (e) => {
             const term = e.target.value.toLowerCase();
             const rows = document.getElementById('accountsTable').getElementsByTagName('tbody')[0].getElementsByTagName('tr');
@@ -167,16 +230,21 @@
                 row.style.display = username.includes(term) ? "" : "none";
             });
         });
+
+        // Sync Manual
         document.getElementById('syncBtn').addEventListener('click', async () => {
             const btn = document.getElementById('syncBtn');
             const icon = document.getElementById('syncIcon');
             btn.disabled = true;
             icon.classList.add('animate-spin');
             try {
-                await fetch('/manual-sync/');
-                window.location.reload();
+                const res = await fetch('/manual-sync/');
+                if (res.ok) {
+                    alert('¡Llamada al puente enviada con éxito!');
+                    window.location.reload();
+                }
             } catch (error) {
-                alert('Motor no disponible.');
+                alert('No se pudo contactar con el motor bridge.');
                 btn.disabled = false;
                 icon.classList.remove('animate-spin');
             }

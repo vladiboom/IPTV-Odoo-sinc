@@ -123,11 +123,13 @@
                                 {% if account.sync_status == "SINCRONIZADO" %}
                                 <div
                                     class="inline-flex items-center text-emerald-600 gap-1.5 font-black uppercase text-[10px] tracking-widest">
-                                    <i data-lucide="check-circle" class="w-4 h-4"></i> Sincronizado</div>
+                                    <i data-lucide="check-circle" class="w-4 h-4"></i> Sincronizado
+                                </div>
                                 {% elif account.sync_status == "DISCREPANCIA" %}
                                 <div
                                     class="inline-flex items-center text-rose-500 gap-1.5 font-black uppercase text-[10px] tracking-widest py-1.5 px-3 bg-rose-50 rounded-xl border border-rose-100 animate-pulse">
-                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> ¡Sin Auditoría!</div>
+                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> ¡Sin Auditoría!
+                                </div>
                                 {% else %}
                                 <span class="text-[9px] font-bold text-slate-300 uppercase italic">Esperando...</span>
                                 {% endif %}

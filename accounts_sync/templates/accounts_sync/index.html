@@ -48,15 +48,15 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Usuarios</p>
-                <p class="text-3xl font-black text-slate-900">{{ stats.total }}</p>
+                <p class="text-3xl font-black text-slate-900">{{stats.total}}</p>
             </div>
             <div class="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-l-emerald-500 border border-slate-200">
                 <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">En Sintonía</p>
-                <p class="text-3xl font-black text-emerald-600">{{ stats.sincronizados }}</p>
+                <p class="text-3xl font-black text-emerald-600">{{stats.sincronizados}}</p>
             </div>
             <div class="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-l-rose-500 border border-slate-200">
                 <p class="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Alertas de Sync</p>
-                <p class="text-3xl font-black text-rose-600">{{ stats.discrepancias }}</p>
+                <p class="text-3xl font-black text-rose-600">{{stats.discrepancias}}</p>
             </div>
         </div>
 
@@ -65,8 +65,7 @@
                 class="px-8 py-6 bg-slate-50/50 border-b border-slate-100 flex flex-col lg:flex-row justify-between items-center gap-4">
                 <div>
                     <h3 class="font-black text-lg text-slate-800 tracking-tight">Centro de Verificación Cruzada</h3>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Página {{
-                        page_obj.number }} de {{ page_obj.paginator.num_pages }}</p>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Página {{page_obj.number}} de {{page_obj.paginator.num_pages}}</p>
                 </div>
                 <div class="flex flex-wrap gap-3 items-center">
                     <select id="statusFilter"
@@ -100,20 +99,16 @@
                         {% for account in page_obj %}
                         <tr class="hover:bg-slate-50/80 transition-all duration-150">
                             <td class="px-8 py-4">
-                                <span class="font-extrabold text-slate-800 text-sm tracking-tight">{{ account.username
-                                    }}</span>
-                                <p class="text-[9px] font-bold text-slate-400 tracking-widest mt-0.5">REF #{{ account.id
-                                    }}</p>
+                                <span class="font-extrabold text-slate-800 text-sm tracking-tight">{{account.username}}</span>
+                                <p class="text-[9px] font-bold text-slate-400 tracking-widest mt-0.5">REF #{{account.id}}</p>
                             </td>
                             <td class="px-8 py-4 text-center">
                                 <span
-                                    class="bg-{{ account.odoo_color }}-50 text-{{ account.odoo_color }}-700 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest border border-{{ account.odoo_color }}-100 shadow-sm inline-block min-w-[100px] uppercase text-center">{{
-                                    account.odoo_state }}</span>
+                                    class="bg-{{account.odoo_color}}-50 text-{{account.odoo_color}}-700 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest border border-{{account.odoo_color}}-100 shadow-sm inline-block min-w-[100px] uppercase text-center">{{account.odoo_state}}</span>
                             </td>
                             <td class="px-8 py-4 text-center">
                                 <span
-                                    class="bg-{{ account.iptv_color }}-50 text-{{ account.iptv_color }}-700 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest border border-{{ account.iptv_color }}-100 shadow-sm inline-block min-w-[100px] uppercase text-center">{{
-                                    account.iptv_label }}</span>
+                                    class="bg-{{account.iptv_color}}-50 text-{{account.iptv_color}}-700 px-3 py-1.5 rounded-lg text-[10px] font-black tracking-widest border border-{{account.iptv_color}}-100 shadow-sm inline-block min-w-[100px] uppercase text-center">{{account.iptv_label}}</span>
                             </td>
                             <td class="px-8 py-4 text-center bg-slate-50/20">
                                 {% if account.sync_status == "SINCRONIZADO" %}
@@ -136,19 +131,18 @@
 
             <div
                 class="px-8 py-6 bg-slate-900 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="text-xs font-bold text-slate-400">Mostrando {{ page_obj.start_index }} - {{
-                    page_obj.end_index }} de {{ stats.total }}</div>
+                <div class="text-xs font-bold text-slate-400">Mostrando {{page_obj.start_index}} - {{page_obj.end_index}} de {{stats.total}}</div>
                 <div class="flex items-center gap-2">
                     {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}"
+                    <a href="?page={{page_obj.previous_page_number}}&status={{status_filter}}"
                         class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 text-white font-bold text-[10px] hover:bg-slate-700 transition-all"><i
                             data-lucide="chevron-left" class="w-3.5 h-3.5"></i> Anterior</a>
                     {% endif %}
                     <div
                         class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-black shadow-lg shadow-indigo-600/20">
-                        {{ page_obj.number }}</div>
+                        {{page_obj.number}}</div>
                     {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}"
+                    <a href="?page={{page_obj.next_page_number}}&status={{status_filter}}"
                         class="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 text-white font-bold text-[10px] hover:bg-slate-700 transition-all">Siguiente
                         <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></a>
                     {% endif %}

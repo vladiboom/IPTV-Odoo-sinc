@@ -24,6 +24,8 @@ load_dotenv()
 
 app = FastAPI(title="Marketing Bridge API v3.0 (Asíncrona)")
 
+from urllib.parse import quote_plus
+
 # --- CONFIGURACIÓN DE BASE DE DATOS (SQLAlchemy) ---
 mysql_user = os.getenv('MYSQL_USER')
 mysql_pass = os.getenv('MYSQL_PASS', '').strip('\"')
@@ -31,7 +33,10 @@ mysql_host = os.getenv('MYSQL_HOST')
 mysql_port = os.getenv('MYSQL_PORT', 3306)
 mysql_db = os.getenv('MYSQL_DB')
 
-MYSQL_URL = f"mysql+pymysql://{mysql_user}:{mysql_pass}@{mysql_host}:{mysql_port}/{mysql_db}"
+# Escapar la contraseña para evitar errores con caracteres especiales (como '#')
+mysql_pass_escaped = quote_plus(mysql_pass)
+
+MYSQL_URL = f"mysql+pymysql://{mysql_user}:{mysql_pass_escaped}@{mysql_host}:{mysql_port}/{mysql_db}"
 engine = create_engine(MYSQL_URL, pool_size=10, max_overflow=20, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

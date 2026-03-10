@@ -129,9 +129,9 @@ def dashboard_index(request):
 @login_required
 def trigger_manual_sync(request):
     """Punto de entrada para forzar la sincronización desde la interfaz web."""
-    api_host = os.getenv("SYNC_API_HOST", "http://127.0.0.1:8001")
+    api_host = os.getenv("SYNC_API_HOST", "http://127.0.0.1:8016")
     try:
-        # Llamada al microservicio de sincronización (ahora en puerto 8001 por defecto)
+        # Llamada al microservicio de sincronización (ahora en puerto 8016 por defecto)
         requests.post(f"{api_host}/sync-now", timeout=5)
         messages.success(request, "El motor de sincronización ha sido notificado.")
     except Exception as e:

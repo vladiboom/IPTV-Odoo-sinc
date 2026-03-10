@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketing Bridge | Centro de Auditoría</title>
+    <title>Marketing Bridge | Auditoría</title>
     {% tailwind_css %}
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
@@ -71,9 +71,9 @@
                 <div class="flex flex-wrap gap-3 items-center">
                     <select id="statusFilter"
                         class="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-600 outline-none focus:border-indigo-500 shadow-sm cursor-pointer">
-                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>VER TODOS</option>
-                        <option value="activo" {% if status_filter == 'activo' %}selected{% endif %}>SOLO ACTIVOS</option>
-                        <option value="cortado" {% if status_filter == 'cortado' %}selected{% endif %}>SOLO CORTADOS
+                        <option value="all" {% if status_filter=='all' %}selected{% endif %}>VER TODOS</option>
+                        <option value="activo" {% if status_filter=='activo' %}selected{% endif %}>SOLO ACTIVOS</option>
+                        <option value="cortado" {% if status_filter=='cortado' %}selected{% endif %}>SOLO CORTADOS
                         </option>
                     </select>
                     <div class="relative w-64">
@@ -82,10 +82,6 @@
                         <input type="text" id="userSearch" placeholder="Buscar identificación..."
                             class="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold outline-none focus:border-indigo-500 shadow-sm">
                     </div>
-                    <button id="syncBtn"
-                        class="bg-slate-900 hover:bg-black text-white px-6 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-slate-900/20">
-                        <i data-lucide="refresh-cw" id="syncIcon" class="w-4 h-4"></i> Forzar Puente
-                    </button>
                 </div>
             </div>
 
@@ -123,15 +119,11 @@
                                 {% if account.sync_status == "SINCRONIZADO" %}
                                 <div
                                     class="inline-flex items-center text-emerald-600 gap-1.5 font-black uppercase text-[10px] tracking-widest">
-                                    <i data-lucide="check-circle" class="w-4 h-4"></i> Sincronizado
-                                </div>
-                                {% elif account.sync_status == "DISCREPANCIA" %}
+                                    <i data-lucide="check-circle" class="w-4 h-4"></i> Sincronizado</div>
+                                {% else %}
                                 <div
                                     class="inline-flex items-center text-rose-500 gap-1.5 font-black uppercase text-[10px] tracking-widest py-1.5 px-3 bg-rose-50 rounded-xl border border-rose-100 animate-pulse">
-                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> ¡Sin Auditoría!
-                                </div>
-                                {% else %}
-                                <span class="text-[9px] font-bold text-slate-300 uppercase italic">Esperando...</span>
+                                    <i data-lucide="alert-triangle" class="w-4 h-4"></i> ¡Sin Auditoría!</div>
                                 {% endif %}
                             </td>
                         </tr>
@@ -184,14 +176,6 @@
                 const username = row.getElementsByTagName('td')[0].getElementsByTagName('span')[0].innerText.toLowerCase();
                 row.style.display = username.includes(term) ? "" : "none";
             });
-        });
-        document.getElementById('syncBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('syncBtn'); const icon = document.getElementById('syncIcon');
-            btn.disabled = true; icon.classList.add('animate-spin');
-            try {
-                const res = await fetch('/manual-sync/');
-                if (res.ok) { alert('Llamada enviada con éxito.'); window.location.reload(); }
-            } catch (error) { alert('No hay conexión con el bridge.'); btn.disabled = false; icon.classList.remove('animate-spin'); }
         });
     </script>
 </body>

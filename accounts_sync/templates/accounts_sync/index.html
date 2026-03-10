@@ -94,9 +94,9 @@
                     <!-- Filtro de Estado -->
                     <select id="statusFilter"
                         class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-black text-slate-600 outline-none focus:border-indigo-500 cursor-pointer shadow-sm">
-                        <option value="all" {% if status_filter=='all' %}selected{% endif %}>VER TODOS</option>
-                        <option value="activo" {% if status_filter=='activo' %}selected{% endif %}>SOLO ACTIVOS</option>
-                        <option value="cortado" {% if status_filter=='cortado' %}selected{% endif %}>SOLO CORTADOS
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>VER TODOS</option>
+                        <option value="activo" {% if status_filter == 'activo' %}selected{% endif %}>SOLO ACTIVOS</option>
+                        <option value="cortado" {% if status_filter == 'cortado' %}selected{% endif %}>SOLO CORTADOS
                         </option>
                     </select>
 

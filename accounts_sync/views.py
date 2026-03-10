@@ -75,6 +75,8 @@ def dashboard_index(request):
                     base_query += " WHERE enabled = 1"
                 elif status_filter == 'cortado':
                     base_query += " WHERE enabled = 0"
+                elif status_filter == 'alerta':
+                    base_query += " WHERE admin_notes LIKE '%Alert:%'"
                 
                 base_query += " ORDER BY id DESC"
                 

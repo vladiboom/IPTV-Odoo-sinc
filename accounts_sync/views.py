@@ -58,7 +58,7 @@ def dashboard_index(request):
             with conn.cursor() as cursor:
                 # Obtenemos los últimos 100 registros para auditar (ahora incluyendo sync_alert)
                 cursor.execute("""
-                    SELECT id, username, enabled, admin_enabled, exp_date, admin_notes, sync_alert 
+                    SELECT id, username, enabled, admin_enabled, exp_date, admin_notes 
                     FROM users 
                     ORDER BY id DESC 
                     LIMIT 200
@@ -69,8 +69,11 @@ def dashboard_index(request):
                     # 1. Recuperar el estado de Odoo (Almacenado por el puente en admin_notes)
                     notas = usr.get('admin_notes', '')
                     raw_odoo = ""
-                    if notas and notas.startswith("Odoo:"):
-                        raw_odoo = notas.replace("Odoo:", "").lower()
+                    if notas and "Odoo:" in notas:
+                        # Extraer solo la parte del estado (antes del pipe si existe)
+                        # Ejemplo: "Odoo:active | Alert: ..." -> "active"
+                        partes = notas.split("Odoo:")[-1].split("|")
+                        raw_odoo = partes[0].strip().lower()
                         usr['odoo_state'] = traducciones_odoo.get(raw_odoo, raw_odoo.capitalize())
                         usr['odoo_color'] = "emerald" if raw_odoo == 'active' else "rose"
                     else:
@@ -87,15 +90,19 @@ def dashboard_index(request):
                     usr['iptv_color'] = "emerald" if iptv_activo else "rose"
 
                     # 3. Cálculo de Sincronía y Manejo de Inconsistencias
-                    usr['sync_alert'] = usr.get('sync_alert', '')
+                    # Detectamos si hay alerta guardada en la nota (ej. "Odoo:Active | Alert: CORTE_FORZADO")
+                    sync_alert = ""
+                    if "| Alert:" in notas:
+                        sync_alert = notas.split("| Alert:")[-1].strip()
+                    
+                    usr['sync_alert'] = sync_alert
                     
                     if not raw_odoo:
                         usr['sync_status'] = "PENDIENTE"
                     else:
                         quiere_activo = (raw_odoo == 'active')
                         
-                        # Si existe una alerta guardada, significa que forzamos una acción en la API
-                        if usr['sync_alert']:
+                        if sync_alert:
                             usr['sync_status'] = "INCONSISTENCIA CORREGIDA"
                             estadisticas["discrepancias"] += 1
                         elif quiere_activo == iptv_activo:

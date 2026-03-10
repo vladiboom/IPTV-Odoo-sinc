@@ -146,15 +146,8 @@ async def run_sync_logic():
     odoo = OdooClient()
     
     with get_db() as db:
-        # 0. Asegurar que exista la columna de alerta
-        try:
-            db.execute(text("ALTER TABLE users ADD COLUMN sync_alert VARCHAR(255) DEFAULT ''"))
-            db.commit()
-        except:
-            db.rollback()
-
-        # 1. Obtener usuarios de la BD (sin LIMIT 200 para procesar a todos los usuarios)
-        result = db.execute(text("SELECT username, enabled, exp_date, admin_notes FROM users"))
+        # 1. Obtener usuarios de la BD (Orden descendente para ver cambios rápido en dashboard)
+        result = db.execute(text("SELECT username, enabled, exp_date, admin_notes FROM users ORDER BY id DESC"))
         usuarios = result.mappings().all()
         
         if not usuarios:
@@ -163,77 +156,75 @@ async def run_sync_logic():
 
         usuarios_dict = {u['username']: u for u in usuarios}
 
-        # 2. Consultar Odoo en paralelo con límite de concurrencia
+        # 2. Consultar Odoo y procesar en tiempo real
         semaphore = asyncio.Semaphore(CONCURRENCY_LIMIT)
+        stats = {"count": 0}
+        
         async with httpx.AsyncClient() as client:
-            async def limited_fetch(username):
+            async def process_user(u):
                 async with semaphore:
-                    return await odoo.get_status_async(client, username)
-            
-            tasks = [limited_fetch(u['username']) for u in usuarios]
-            resultados_odoo = await asyncio.gather(*tasks)
+                    res = await odoo.get_status_async(client, u['username'])
+                    if res['state'] is None: return
 
-        # 3. Aplicar cambios en lote o secuencialmente (BD)
-        for res in resultados_odoo:
-            if res['state'] is None: continue
-            
-            db_user = usuarios_dict.get(res['username'])
-            if not db_user: continue
-
-            objetivo = res['iptv_username'] if res['iptv_username'] else res['username']
-            nota = f"Odoo:{res['state']}"
-            
-            iptv_is_active = (db_user['enabled'] == 1)
-            odoo_is_active = res['active']
-            
-            inconsistencia = False
-            alerta = ""
-
-            if iptv_is_active and not odoo_is_active:
-                inconsistencia = True
-                if res['state'] == 'not_found':
-                    alerta = "ALERTA_FANTASMA (Activo en IPTV pero NO EXISTE en Odoo. NO CORTADO AUTOMÁTICAMENTE)"
-                    logger.warning(f"[ALERTA GRAVE] {objetivo} - {alerta}")
-                    # CRÍTICO: No lo cortamos automáticamente para evitar masacres de clientes viejos
-                    if habilitado and nota != db_user.get('admin_notes'):
-                        db.execute(
-                            text("UPDATE users SET admin_notes = :nota, sync_alert = :alerta WHERE username = :user"),
-                            {"nota": nota, "user": objetivo, "alerta": alerta}
-                        )
-                    continue # Saltamos la lógica de corte base
-                else:
-                    alerta = "CORTE_FORZADO (Desactivado por Odoo pero estaba activo en IPTV)"
-                    logger.info(f"[INCONSISTENCIA BAJA] {objetivo} - {alerta}")
-            elif not iptv_is_active and odoo_is_active:
-                inconsistencia = True
-                alerta = "ALTA_FORZADA (Activado por Odoo pero estaba cortado en IPTV)"
-                logger.info(f"[INCONSISTENCIA ALTA] {objetivo} - {alerta}")
-
-            # Solo actualizamos la base de datos si hay una inconsistencia o si la nota cambia (para mantener los registros frescos)
-            # o si nunca hemos procesado a este usuario.
-            
-            if res['active']:
-                if habilitado and (inconsistencia or nota != db_user.get('admin_notes')):
-                    query_str = "UPDATE users SET enabled = 1, admin_enabled = 1, exp_date = :exp, admin_notes = :nota"
-                    if inconsistencia: query_str += ", sync_alert = :alerta"
-                    query_str += " WHERE username = :user"
+                    db_user = u
+                    objetivo = res['iptv_username'] if res['iptv_username'] else res['username']
+                    iptv_is_active = (db_user['enabled'] == 1)
+                    odoo_is_active = res['active']
                     
-                    params = {"exp": ACTIVE_EXP_DATE, "nota": nota, "user": objetivo}
-                    if inconsistencia: params["alerta"] = alerta
+                    inconsistencia = False
+                    alerta = ""
 
-                    db.execute(text(query_str), params)
-                    logger.info(f"[ALTA] {objetivo} (Odoo: {res['state']})")
-            else:
-                if habilitado and (inconsistencia or nota != db_user.get('admin_notes')):
-                    query_str = "UPDATE users SET enabled = 0, admin_notes = :nota"
-                    if inconsistencia: query_str += ", sync_alert = :alerta"
-                    query_str += " WHERE username = :user"
+                    # Extraer notas originales
+                    original_notes = db_user.get('admin_notes', '') or ""
+                    if "Odoo:" in original_notes:
+                        partes_limpias = [p.strip() for p in original_notes.split("|") if "Odoo:" not in p and "Alert:" not in p]
+                        original_notes = " | ".join(partes_limpias)
+
+                    if iptv_is_active and not odoo_is_active:
+                        inconsistencia = True
+                        if res['state'] == 'not_found':
+                            alerta = "ALERTA_FANTASMA"
+                        else:
+                            alerta = "CORTE_FORZADO"
+                    elif not iptv_is_active and odoo_is_active:
+                        inconsistencia = True
+                        alerta = "ALTA_FORZADA"
+
+                    # Construir nueva nota
+                    nueva_tag = f"Odoo:{res['state'].capitalize()}"
+                    if alerta:
+                        nueva_tag += f" | Alert: {alerta}"
                     
-                    params = {"nota": nota, "user": objetivo}
-                    if inconsistencia: params["alerta"] = alerta
+                    final_note = f"{nueva_tag} | {original_notes}" if original_notes else nueva_tag
+                    
+                    if habilitado:
+                        if odoo_is_active:
+                            if inconsistencia or final_note != db_user.get('admin_notes'):
+                                db.execute(
+                                    text("UPDATE users SET enabled = 1, admin_enabled = 1, exp_date = :exp, admin_notes = :nota WHERE username = :user"),
+                                    {"exp": ACTIVE_EXP_DATE, "nota": final_note, "user": objetivo}
+                                )
+                        else:
+                            deberia_cortar = (res['state'] != 'not_found')
+                            if inconsistencia or final_note != db_user.get('admin_notes'):
+                                if deberia_cortar:
+                                    db.execute(
+                                        text("UPDATE users SET enabled = 0, admin_notes = :nota WHERE username = :user"),
+                                        {"nota": final_note, "user": objetivo}
+                                    )
+                                else:
+                                    db.execute(
+                                        text("UPDATE users SET admin_notes = :nota WHERE username = :user"),
+                                        {"nota": final_note, "user": objetivo}
+                                    )
+                    
+                    stats["count"] += 1
+                    # Commit cada 20 usuarios para máxima fluidez
+                    if habilitado and stats["count"] % 20 == 0:
+                        db.commit()
 
-                    db.execute(text(query_str), params)
-                    logger.info(f"[BAJA] {objetivo} (Odoo: {res['state']})")
+            # Lanzamos todas las tareas
+            await asyncio.gather(*[process_user(u) for u in usuarios])
         
         if habilitado:
             db.commit()
@@ -246,7 +237,7 @@ def sync_wrapper():
 
 # --- API Y TAREAS ---
 scheduler = BackgroundScheduler()
-scheduler.add_job(sync_wrapper, 'interval', minutes=10, id="job_sync")
+scheduler.add_job(sync_wrapper, 'interval', minutes=30, id="job_sync")
 scheduler.start()
 
 @app.get("/health")

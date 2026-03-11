@@ -45,18 +45,30 @@
     </header>
 
     <main class="max-w-7xl mx-auto py-8 px-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Usuarios</p>
-                <p class="text-3xl font-black text-slate-900">{{stats.total}}</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total IPTV</p>
+                <p class="text-2xl font-black text-slate-900">{{ stats.total }}</p>
             </div>
-            <div class="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-l-emerald-500 border border-slate-200">
-                <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">En Sintonía</p>
-                <p class="text-3xl font-black text-emerald-600">{{stats.sincronizados}}</p>
+            <div class="bg-white p-4 rounded-3xl shadow-sm border-l-4 border-l-emerald-500 border border-slate-200">
+                <p class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-1">Auditados OK</p>
+                <p class="text-2xl font-black text-emerald-600">{{ stats.sincronizados }}</p>
             </div>
-            <div class="bg-white p-6 rounded-3xl shadow-sm border-l-4 border-l-rose-500 border border-slate-200">
-                <p class="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Alertas de Sync</p>
-                <p class="text-3xl font-black text-rose-600">{{stats.discrepancias}}</p>
+            <div class="bg-white p-4 rounded-3xl shadow-sm border-l-4 border-l-rose-500 border border-slate-200">
+                <p class="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-1">Discrepancias</p>
+                <p class="text-2xl font-black text-rose-600">{{ stats.discrepancias }}</p>
+            </div>
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200">
+                <p class="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1">Odoo Activos</p>
+                <p class="text-2xl font-black text-indigo-600">{{ stats.odoo_activos }}</p>
+            </div>
+            <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-200">
+                <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Odoo Cortados</p>
+                <p class="text-2xl font-black text-slate-700">{{ stats.odoo_cortados }}</p>
+            </div>
+            <div class="bg-white p-4 rounded-3xl shadow-sm border-l-4 border-l-amber-500 border border-slate-200 bg-amber-50/30">
+                <p class="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">Pendientes</p>
+                <p class="text-2xl font-black text-amber-700">{{ stats.pendientes }}</p>
             </div>
         </div>
 

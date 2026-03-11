@@ -51,22 +51,51 @@ def dashboard_index(request):
         'not_found': 'No Existe'
     }
 
-    estadisticas = {"total": 0, "sincronizados": 0, "discrepancias": 0}
+    estadisticas = {
+        "total": 0, 
+        "sincronizados": 0, 
+        "discrepancias": 0,
+        "odoo_activos": 0,
+        "odoo_cortados": 0,
+        "pendientes": 0
+    }
     usuarios = []
 
     try:
         with mysql_conn() as conn:
             with conn.cursor() as cursor:
-                # 1. Obtener Estadísticas Globales Rápida (Sin recorrer todo en Python)
+                # 1. Estadísticas Globales
                 cursor.execute("SELECT COUNT(*) as total FROM users")
                 estadisticas["total"] = cursor.fetchone()["total"]
                 
+                # Sincronizados Reales: El estado de Odoo coincide con el de IPTV (Enabled)
+                cursor.execute("""
+                    SELECT COUNT(*) as ok FROM users 
+                    WHERE (admin_notes LIKE 'Odoo:Active%' AND enabled = 1)
+                       OR (admin_notes LIKE 'Odoo:Disabled%' AND enabled = 0)
+                       OR (admin_notes LIKE 'Odoo:Suspended%' AND enabled = 0)
+                """)
+                estadisticas["sincronizados"] = cursor.fetchone()["ok"]
+
+                # Alertas Reales: Tienen el prefijo Alert:
                 cursor.execute("SELECT COUNT(*) as disc FROM users WHERE admin_notes LIKE '%Alert:%'")
                 estadisticas["discrepancias"] = cursor.fetchone()["disc"]
-                
-                # Sincronizados (Estimación rápida: los que tienen Odoo:Active y están habilitados sin alerta)
-                cursor.execute("SELECT COUNT(*) as ok FROM users WHERE enabled = 1 AND admin_notes LIKE 'Odoo:Active%' AND admin_notes NOT LIKE '%Alert:%'")
-                estadisticas["sincronizados"] = cursor.fetchone()["ok"]
+
+                # Activos vs Cortados (Según Odoo)
+                cursor.execute("SELECT COUNT(*) as acts FROM users WHERE admin_notes LIKE 'Odoo:Active%'")
+                estadisticas["odoo_activos"] = cursor.fetchone()["acts"]
+
+                cursor.execute("""
+                    SELECT COUNT(*) as cuts FROM users 
+                    WHERE admin_notes LIKE 'Odoo:Disabled%' 
+                       OR admin_notes LIKE 'Odoo:Suspended%' 
+                       OR admin_notes LIKE 'Odoo:Cancel%'
+                """)
+                estadisticas["odoo_cortados"] = cursor.fetchone()["cuts"]
+
+                # Pendientes: Usuarios que el robot aún no ha procesado (no tienen 'Odoo:')
+                cursor.execute("SELECT COUNT(*) as pends FROM users WHERE admin_notes NOT LIKE 'Odoo:%' OR admin_notes IS NULL")
+                estadisticas["pendientes"] = cursor.fetchone()["pends"]
 
                 # 2. Construir Query con Filtro
                 base_query = "SELECT id, username, enabled, exp_date, admin_notes FROM users"
